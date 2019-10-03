@@ -15,7 +15,7 @@ DWORD convertToDword( UINT8 *buffer)
 	return res;
 }
 
-WORD convertToword(UINT8 *buffer)
+WORD convertToWord(UINT8 *buffer)
 {
 	WORD res = 0;
 	res += buffer[0];
@@ -70,8 +70,8 @@ int main()
 		exit(-1);
 	}
 
-	dosHeader.e_magic = convertToDword(lpBuffer);
-	if (dosHeader.e_magic == 0x5a4d)
+	dosHeader.e_magic = convertToWord(lpBuffer);
+	if (dosHeader.e_magic != 0x5a4d)
 	{
 		printf("MZ signature not found");
 		exit(-1);
@@ -79,28 +79,58 @@ int main()
 
 	cursor += sizeof(WORD);
 
-	dosHeader.e_cblp	   =  convertToDword(lpBuffer);
-	dosHeader.e_cp		   =  convertToDword(lpBuffer);
-	dosHeader.e_crlc	   =  convertToDword(lpBuffer);
-	dosHeader.e_cparhdr	   =  convertToDword(lpBuffer);
-	dosHeader.e_minalloc   =  convertToDword(lpBuffer);
-	dosHeader.e_maxalloc   =  convertToDword(lpBuffer);
-	dosHeader.e_ss		   =  convertToDword(lpBuffer);
-	dosHeader.e_sp		   =  convertToDword(lpBuffer);
-	dosHeader.e_csum	   =  convertToDword(lpBuffer);
-	dosHeader.e_ip		   =  convertToDword(lpBuffer);
-	dosHeader.e_cs		   =  convertToDword(lpBuffer);
-	dosHeader.e_lfarlc	   =  convertToDword(lpBuffer);
-	dosHeader.e_ovno	   =  convertToDword(lpBuffer);
-	dosHeader.e_res[4];	
-	dosHeader.e_oemid;
-	dosHeader.e_oeminfo;
-	dosHeader.e_res2[10];
-	dosHeader.e_lfanew;
+	dosHeader.e_cblp	   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
 
+	dosHeader.e_cp		   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
 
+	dosHeader.e_crlc	   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
 
-	elfanew = convertToDword(lpBuffer+0x3c);
+	dosHeader.e_cparhdr	   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+
+	dosHeader.e_minalloc   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+
+	dosHeader.e_maxalloc   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+
+	dosHeader.e_ss		   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+
+	dosHeader.e_sp		   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+
+	dosHeader.e_csum	   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+
+	dosHeader.e_ip		   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+
+	dosHeader.e_cs		   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+
+	dosHeader.e_lfarlc	   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+
+	dosHeader.e_ovno	   =  convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+
+	// dosHeader.e_res[4];	
+	cursor += sizeof(WORD)*4;
+
+	// dosHeader.e_oemid;
+	cursor += sizeof(WORD);
+
+	// dosHeader.e_oeminfo;
+	cursor += sizeof(WORD);
+
+	// dosHeader.e_res2[10];
+	cursor += sizeof(WORD)*10;
+
+	dosHeader.e_lfanew = convertToDword(lpBuffer + cursor);
 
 	return 0;
 }
