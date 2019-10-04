@@ -1,37 +1,26 @@
 #include "pch.h"
+#include "../pe/ds.h"
+#include "../pe/functions.h"
 #include <stdio.h>
 #include <windows.h>
 #include <winnt.h>
 
-DWORD convertToDword( UINT8 *buffer)
-{
-	DWORD res = 0;
-	DWORD test = sizeof(buffer);
-	res += buffer[0];
-	res += buffer[1] << 8;
-	res += buffer[2] << 16;
-	res += buffer[3] << 24;
-
-	return res;
-}
-
-WORD convertToWord(UINT8 *buffer)
-{
-	WORD res = 0;
-	res += buffer[0];
-	res += buffer[1] << 8;
-
-	return res;
-}
-
 int main()
 {
-	DWORD elfanew = 0;	
+	DWORD elfanew = 0;
 	int numArgs = 0;
 	DWORD dwordRef;
 	DWORD cursor = 0;
 
 	IMAGE_DOS_HEADER dosHeader;
+	IMAGE_FILE_HEADER ifh;
+	IMAGE_OPTIONAL_HEADER32 ioh32;
+	IMAGE_OPTIONAL_HEADER64 ioh64;
+
+	memset(&dosHeader, 0x00, sizeof(IMAGE_DOS_HEADER));
+	memset(&ifh, 0x00, sizeof(IMAGE_FILE_HEADER));
+	memset(&ioh32, 0x00, sizeof(IMAGE_OPTIONAL_HEADER32));
+	memset(&ioh64, 0x00, sizeof(IMAGE_OPTIONAL_HEADER64));
 
 	LPCWSTR cmdline = GetCommandLineW();
 
@@ -56,12 +45,12 @@ int main()
 		exit(-1);
 	}
 
-	 UINT8 *lpBuffer = (UINT8 *)malloc(fileSize);
-	 if (lpBuffer == NULL)
-	 {
-		 printf("unexpected result from malloc");
-		 exit(-1);
-	 }
+	UINT8 *lpBuffer = (UINT8 *)malloc(fileSize);
+	if (lpBuffer == NULL)
+	{
+		printf("unexpected result from malloc");
+		exit(-1);
+	}
 
 	BOOL res = ReadFile(hSrcFile, lpBuffer, fileSize, &dwordRef, 0);
 	if (dwordRef != fileSize || res == FALSE)
@@ -70,67 +59,35 @@ int main()
 		exit(-1);
 	}
 
-	dosHeader.e_magic = convertToWord(lpBuffer);
-	if (dosHeader.e_magic != 0x5a4d)
+	cursor = parseDosHeader(&dosHeader, lpBuffer, cursor);
+
+	DWORD sizeOfDosStub = dosHeader.e_lfanew - cursor;
+
+	cursor = dosHeader.e_lfanew;
+	cursor = parseImageFileHeader(&ifh, lpBuffer, cursor);
+
+	// Note that the size of the optional header is not fixed. 
+	// The SizeOfOptionalHeader field in the COFF header must be used to validate that a probe into the file for a particular data directory does not go beyond SizeOfOptionalHeader. 
+
+	WORD iohMagic = convertToWord(lpBuffer + cursor);
+
+	if (iohMagic == 0x10b)
 	{
-		printf("MZ signature not found");
-		exit(-1);
+		cursor = parseImageOptionalHeader32(&ioh32, lpBuffer, cursor, ifh.SizeOfOptionalHeader);
+		printIOH32(&ioh32);
 	}
 
-	cursor += sizeof(WORD);
+	else if (iohMagic == 0x20b)
+	{
+		cursor = parseImageOptionalHeader64(&ioh64, lpBuffer, cursor, ifh.SizeOfOptionalHeader);
+		printIOH64(&ioh64);
+	}
 
-	dosHeader.e_cblp	   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_cp		   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_crlc	   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_cparhdr	   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_minalloc   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_maxalloc   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_ss		   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_sp		   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_csum	   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_ip		   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_cs		   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_lfarlc	   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	dosHeader.e_ovno	   =  convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-
-	// dosHeader.e_res[4];	
-	cursor += sizeof(WORD)*4;
-
-	// dosHeader.e_oemid;
-	cursor += sizeof(WORD);
-
-	// dosHeader.e_oeminfo;
-	cursor += sizeof(WORD);
-
-	// dosHeader.e_res2[10];
-	cursor += sizeof(WORD)*10;
-
-	dosHeader.e_lfanew = convertToDword(lpBuffer + cursor);
+	else
+	{
+		printf("Invalid Magic value in IMAGE_OPTIONAL_HEADER");
+		exit(-1);
+	}
 
 	return 0;
 }
