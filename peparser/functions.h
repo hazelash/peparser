@@ -38,89 +38,189 @@ WORD convertToWord(UINT8 *buffer)
 	return res;
 }
 
+VOID printDosHeader(IMAGE_DOS_HEADER *dosHeader, DWORD baseOffset)
+{
+	// printf("%016I64x, %x", (void **)dosHeader, dosHeader->e_magic);
+	printf("=============================================\n");
+	printf("IMAGE_DOS_HEADER (TODO)\n");
+	printf("=============================================\n");
+
+}
+
+VOID printFileHeader(IMAGE_FILE_HEADER *ifh)
+{
+	printf("=============================================\n");
+	printf("IMAGE_FILE_HEADER\n");
+	printf("=============================================\n");
+
+	printf("%-36s %04x\n", "Machine", ifh->Machine);
+	printf("%-36s %04x\n", "NumberOfSections", ifh->NumberOfSections);
+	printf("%-36s %08x\n", "TimeDateStamp", ifh->TimeDateStamp);				// TODO convert into actual time.
+	printf("%-36s %08x\n", "PointerToSymbolTable", ifh->PointerToSymbolTable);
+	printf("%-36s %08x\n", "NumberOfSymbols", ifh->NumberOfSymbols);
+	printf("%-36s %04x\n", "SizeOfOptionalHeader", ifh->SizeOfOptionalHeader);
+	printf("%-36s %04x\n", "Characteristics", ifh->Characteristics);
+	printf("- - - - - - - - - - - - - - - - - - - - - - -\n");
+
+	int count = 0;
+
+	for (int i = 0; i < NUMBER_OF_IFH_CHARACTERISTICS; i++)
+	{
+		if (ifh->Characteristics & ifh_characteristics[i].value)
+		{
+			ifh_characteristics[i].isActive = true;
+			count++;
+		}
+	}
+
+	if (count == 0)
+	{
+		printf("Invalid Characteristics value in IMAGE_FILE_HEADER");
+		exit(-1);
+	}
+
+	for (int i = 0; i < NUMBER_OF_IFH_CHARACTERISTICS; i++)
+	{
+		if (ifh_characteristics[i].isActive)
+		{
+			printf("%s\n", ifh_characteristics[i].flagName);
+		}
+	}
+
+}
+
 VOID printIOH32(IMAGE_OPTIONAL_HEADER32 *ioh32)
 {
-	printf("Magic %08x\n", ioh32->Magic);
-	printf("MajorLinkerVersion %08x\n", ioh32->MajorLinkerVersion);
-	printf("MinorLinkerVersion %08x\n", ioh32->MinorLinkerVersion);
-	printf("SizeOfCode %08x\n", ioh32->SizeOfCode);
-	printf("SizeOfInitializedData %08x\n", ioh32->SizeOfInitializedData);
-	printf("SizeOfUninitializedData %08x\n", ioh32->SizeOfUninitializedData);
-	printf("AddressOfEntryPoint %08x\n", ioh32->AddressOfEntryPoint);
-	printf("BaseOfCode %08x\n", ioh32->BaseOfCode);
-	printf("BaseOfData %08x\n", ioh32->BaseOfData);
-	printf("ImageBase %08x\n", ioh32->ImageBase);
-	printf("SectionAlignment %08x\n", ioh32->SectionAlignment);
-	printf("FileAlignment %08x\n", ioh32->FileAlignment);
-	printf("MajorOperatingSystemVersion %08x\n", ioh32->MajorOperatingSystemVersion);
-	printf("MinorOperatingSystemVersion %08x\n", ioh32->MinorOperatingSystemVersion);
-	printf("MajorImageVersion %08x\n", ioh32->MajorImageVersion);
-	printf("MinorImageVersion %08x\n", ioh32->MinorImageVersion);
-	printf("MajorSubsystemVersion %08x\n", ioh32->MajorSubsystemVersion);
-	printf("MinorSubsystemVersion %08x\n", ioh32->MinorSubsystemVersion);
-	printf("Win32VersionValue %08x\n", ioh32->Win32VersionValue);
-	printf("SizeOfImage %08x\n", ioh32->SizeOfImage);
-	printf("SizeOfHeaders %08x\n", ioh32->SizeOfHeaders);
-	printf("CheckSum %08x\n", ioh32->CheckSum);
-	printf("Subsystem %08x\n", ioh32->Subsystem);
-	printf("DllCharacteristics %08x\n", ioh32->DllCharacteristics);
-	printf("SizeOfStackReserve %08x\n", ioh32->SizeOfStackReserve);
-	printf("SizeOfStackCommit %08x\n", ioh32->SizeOfStackCommit);
-	printf("SizeOfHeapReserve %08x\n", ioh32->SizeOfHeapReserve);
-	printf("SizeOfHeapCommit %08x\n", ioh32->SizeOfHeapCommit);
-	printf("LoaderFlags %08x\n", ioh32->LoaderFlags);
-	printf("NumberOfRvaAndSizes %08x\n", ioh32->NumberOfRvaAndSizes);
+	printf("=============================================\n");
+	printf("IMAGE_OPTIONAL_HEADER32\n");
+	printf("=============================================\n");
+
+	printf("%-36s %08x\n", "Magic", ioh32->Magic);
+	printf("%-36s %04x\n", "MajorLinkerVersion", ioh32->MajorLinkerVersion);
+	printf("%-36s %04x\n", "MinorLinkerVersion", ioh32->MinorLinkerVersion);
+	printf("%-36s %08x\n", "SizeOfCode", ioh32->SizeOfCode);
+	printf("%-36s %08x\n", "SizeOfInitializedData", ioh32->SizeOfInitializedData);
+	printf("%-36s %08x\n", "SizeOfUninitializedData", ioh32->SizeOfUninitializedData);
+	printf("%-36s %08x\n", "AddressOfEntryPoint", ioh32->AddressOfEntryPoint);
+	printf("%-36s %08x\n", "BaseOfCode", ioh32->BaseOfCode);
+	printf("%-36s %08x\n", "ImageBase", ioh32->ImageBase);
+	printf("%-36s %08x\n", "SectionAlignment", ioh32->SectionAlignment);
+	printf("%-36s %08x\n", "FileAlignment", ioh32->FileAlignment);
+	printf("%-36s %04x\n", "MajorOperatingSystemVersion", ioh32->MajorOperatingSystemVersion);
+	printf("%-36s %04x\n", "MinorOperatingSystemVersion", ioh32->MinorOperatingSystemVersion);
+	printf("%-36s %04x\n", "MajorImageVersion", ioh32->MajorImageVersion);
+	printf("%-36s %04x\n", "MinorImageVersion", ioh32->MinorImageVersion);
+	printf("%-36s %04x\n", "MajorSubsystemVersion", ioh32->MajorSubsystemVersion);
+	printf("%-36s %04x\n", "MinorSubsystemVersion", ioh32->MinorSubsystemVersion);
+	printf("%-36s %08x\n", "Win32VersionValue", ioh32->Win32VersionValue);
+	printf("%-36s %08x\n", "SizeOfImage", ioh32->SizeOfImage);
+	printf("%-36s %08x\n", "SizeOfHeaders", ioh32->SizeOfHeaders);
+	printf("%-36s %08x\n", "CheckSum", ioh32->CheckSum);
+	printf("%-36s %04x\n", "Subsystem", ioh32->Subsystem);
+	printf("%-36s %04x\n", "DllCharacteristics", ioh32->DllCharacteristics);
+	printf("%-36s %08x\n", "SizeOfStackReserve", ioh32->SizeOfStackReserve);
+	printf("%-36s %08x\n", "SizeOfStackCommit", ioh32->SizeOfStackCommit);
+	printf("%-36s %08x\n", "SizeOfHeapReserve", ioh32->SizeOfHeapReserve);
+	printf("%-36s %08x\n", "SizeOfHeapCommit", ioh32->SizeOfHeapCommit);
+	printf("%-36s %08x\n", "LoaderFlags", ioh32->LoaderFlags);
+	printf("%-36s %08x\n", "NumberOfRvaAndSizes", ioh32->NumberOfRvaAndSizes);
+	printf("- - - - - - - - - - - - - - - - - - - - - - -\n");
 
 	for (DWORD i = 0; i < ioh32->NumberOfRvaAndSizes; i++)
 	{
+		printf("%-25s ", idd_names[i].fieldName);
 		printf("%08X | ", ioh32->DataDirectory[i].VirtualAddress);
 		printf("%08X\n", ioh32->DataDirectory[i].Size);
 	}
 }
 
-VOID printDosHeader(IMAGE_DOS_HEADER *dosHeader, DWORD baseOffset)
-{
-	// printf("%016I64x, %x", (void **)dosHeader, dosHeader->e_magic);
-	printf("TODO\n");
-}
-
 VOID printIOH64(IMAGE_OPTIONAL_HEADER64 *ioh64)
 {
-	printf("Magic	%08x\n", ioh64->Magic);
-	printf("MajorLinkerVersion	%08x\n", ioh64->MajorLinkerVersion);
-	printf("MinorLinkerVersion	%08x\n", ioh64->MinorLinkerVersion);
-	printf("SizeOfCode	%08x\n", ioh64->SizeOfCode);
-	printf("SizeOfInitializedData	%08x\n", ioh64->SizeOfInitializedData);
-	printf("SizeOfUninitializedData	%08x\n", ioh64->SizeOfUninitializedData);
-	printf("AddressOfEntryPoint	%08x\n", ioh64->AddressOfEntryPoint);
-	printf("BaseOfCode	%08x\n", ioh64->BaseOfCode);
-	printf("ImageBase	%016I64x\n", ioh64->ImageBase);
-	printf("SectionAlignment	%08x\n", ioh64->SectionAlignment);
-	printf("FileAlignment	%08x\n", ioh64->FileAlignment);
-	printf("MajorOperatingSystemVersion	%08x\n", ioh64->MajorOperatingSystemVersion);
-	printf("MinorOperatingSystemVersion	%08x\n", ioh64->MinorOperatingSystemVersion);
-	printf("MajorImageVersion	%08x\n", ioh64->MajorImageVersion);
-	printf("MinorImageVersion	%08x\n", ioh64->MinorImageVersion);
-	printf("MajorSubsystemVersion	%08x\n", ioh64->MajorSubsystemVersion);
-	printf("MinorSubsystemVersion	%08x\n", ioh64->MinorSubsystemVersion);
-	printf("Win32VersionValue	%08x\n", ioh64->Win32VersionValue);
-	printf("SizeOfImage	%08x\n", ioh64->SizeOfImage);
-	printf("SizeOfHeaders	%08x\n", ioh64->SizeOfHeaders);
-	printf("CheckSum	%08x\n", ioh64->CheckSum);
-	printf("Subsystem	%08x\n", ioh64->Subsystem);
-	printf("DllCharacteristics	%08x\n", ioh64->DllCharacteristics);
-	printf("SizeOfStackReserve	%016I64x\n", ioh64->SizeOfStackReserve);
-	printf("SizeOfStackCommit	%016I64x\n", ioh64->SizeOfStackCommit);
-	printf("SizeOfHeapReserve	%016I64x\n", ioh64->SizeOfHeapReserve);
-	printf("SizeOfHeapCommit	%016I64x\n", ioh64->SizeOfHeapCommit);
-	printf("LoaderFlags	%08x\n", ioh64->LoaderFlags);
-	printf("NumberOfRvaAndSizes	%08x\n", ioh64->NumberOfRvaAndSizes);
+	printf("=============================================\n");
+	printf("IMAGE_OPTIONAL_HEADER64\n");
+	printf("=============================================\n");
+
+	printf("%-36s %08x\n", "Magic", ioh64->Magic);
+	printf("%-36s %04x\n", "MajorLinkerVersion", ioh64->MajorLinkerVersion);
+	printf("%-36s %04x\n", "MinorLinkerVersion", ioh64->MinorLinkerVersion);
+	printf("%-36s %08x\n", "SizeOfCode", ioh64->SizeOfCode);
+	printf("%-36s %08x\n", "SizeOfInitializedData", ioh64->SizeOfInitializedData);
+	printf("%-36s %08x\n", "SizeOfUninitializedData", ioh64->SizeOfUninitializedData);
+	printf("%-36s %08x\n", "AddressOfEntryPoint", ioh64->AddressOfEntryPoint);
+	printf("%-36s %08x\n", "BaseOfCode", ioh64->BaseOfCode);
+	printf("%-36s %016I64x\n", "ImageBase", ioh64->ImageBase);
+	printf("%-36s %08x\n", "SectionAlignment", ioh64->SectionAlignment);
+	printf("%-36s %08x\n", "FileAlignment", ioh64->FileAlignment);
+	printf("%-36s %04x\n", "MajorOperatingSystemVersion", ioh64->MajorOperatingSystemVersion);
+	printf("%-36s %04x\n", "MinorOperatingSystemVersion", ioh64->MinorOperatingSystemVersion);
+	printf("%-36s %04x\n", "MajorImageVersion", ioh64->MajorImageVersion);
+	printf("%-36s %04x\n", "MinorImageVersion", ioh64->MinorImageVersion);
+	printf("%-36s %04x\n", "MajorSubsystemVersion", ioh64->MajorSubsystemVersion);
+	printf("%-36s %04x\n", "MinorSubsystemVersion", ioh64->MinorSubsystemVersion);
+	printf("%-36s %08x\n", "Win32VersionValue", ioh64->Win32VersionValue);
+	printf("%-36s %08x\n", "SizeOfImage", ioh64->SizeOfImage);
+	printf("%-36s %08x\n", "SizeOfHeaders", ioh64->SizeOfHeaders);
+	printf("%-36s %08x\n", "CheckSum", ioh64->CheckSum);
+	printf("%-36s %04x\n", "Subsystem", ioh64->Subsystem);
+	printf("%-36s %04x\n", "DllCharacteristics", ioh64->DllCharacteristics);
+	printf("%-36s %016I64x\n", "SizeOfStackReserve", ioh64->SizeOfStackReserve);
+	printf("%-36s %016I64x\n", "SizeOfStackCommit", ioh64->SizeOfStackCommit);
+	printf("%-36s %016I64x\n", "SizeOfHeapReserve", ioh64->SizeOfHeapReserve);
+	printf("%-36s %016I64x\n", "SizeOfHeapCommit", ioh64->SizeOfHeapCommit);
+	printf("%-36s %08x\n", "LoaderFlags", ioh64->LoaderFlags);
+	printf("%-36s %08x\n", "NumberOfRvaAndSizes", ioh64->NumberOfRvaAndSizes);
+	printf("- - - - - - - - - - - - - - - - - - - - - - -\n");
 
 	for (DWORD i = 0; i < ioh64->NumberOfRvaAndSizes; i++)
 	{
-		printf("%25s: ", idd_names[i].fieldName);
+		printf("%-25s ", idd_names[i].fieldName);
 		printf("%08X | ", ioh64->DataDirectory[i].VirtualAddress);
 		printf("%08X\n", ioh64->DataDirectory[i].Size);
+	}
+}
+
+
+VOID printSectionHeader(IMAGE_SECTION_HEADER *sectionHeader, DWORD sectionNo)
+{
+	printf("=============================================\n");
+	printf("IMAGE_SECTION_HEADER [%d]\n", sectionNo);
+	printf("=============================================\n");
+
+	printf("%-36s %s\n", "Name", sectionHeader->Name);
+	printf("%-36s %08x\n", "VirtualSize", sectionHeader->Misc.VirtualSize);
+	printf("%-36s %08x\n", "VirtualAddress", sectionHeader->VirtualAddress);
+	printf("%-36s %08x\n", "SizeOfRawData", sectionHeader->SizeOfRawData);
+	printf("%-36s %08x\n", "PointerToRawData", sectionHeader->PointerToRawData);
+	printf("%-36s %08x\n", "PointerToRelocations", sectionHeader->PointerToRelocations);
+	printf("%-36s %08x\n", "PointerToLinenumbers", sectionHeader->PointerToLinenumbers);
+	printf("%-36s %04x\n", "NumberOfRelocations", sectionHeader->NumberOfRelocations);
+	printf("%-36s %04x\n", "PointerToLinenumbers", sectionHeader->PointerToLinenumbers);
+	printf("%-36s %08x\n", "Characteristics", sectionHeader->Characteristics);
+	printf("- - - - - - - - - - - - - - - - - - - - - - -\n");
+
+	int count = 0;
+
+	for (int i = 0; i < NUMBER_OF_SECTION_CHARACTERISTICS; i++)
+	{
+		if (sectionHeader->Characteristics & section_characteristics[i].value)
+		{
+			section_characteristics[i].isActive = true;
+			count++;
+		}
+	}
+	if (count == 0)
+	{
+		printf("Invalid Characteristics value in IMAGE_SECTION_HEADER");
+		exit(-1);
+	}
+
+	for (int i = 0; i < NUMBER_OF_SECTION_CHARACTERISTICS; i++)
+	{
+		if (section_characteristics[i].isActive)
+		{
+			printf("%s\n", section_characteristics[i].flagName);
+			section_characteristics[i].isActive = false; // after printing, revert it back to false, maybe I should use an array and keep information of each section 
+		}
 	}
 
 }
@@ -391,31 +491,6 @@ DWORD parseImageFileHeader(IMAGE_FILE_HEADER *ifh, UINT8 *lpBuffer, DWORD cursor
 	ifh->Characteristics = convertToWord(lpBuffer + cursor);
 	cursor += sizeof(WORD);
 
-	int count = 0;
-
-	for (int i = 0; i < NUMBER_OF_IFH_CHARACTERISTICS; i++)
-	{
-		if (ifh->Characteristics & ifh_characteristics[i].value)
-		{
-			ifh_characteristics[i].isActive = true;
-			count++;
-		}
-	}
-
-	if (count == 0)
-	{
-		printf("Invalid Characteristics value in IMAGE_FILE_HEADER");
-		exit(-1);
-	}
-
-	for (int i = 0; i < NUMBER_OF_IFH_CHARACTERISTICS; i++)
-	{
-		if (ifh_characteristics[i].isActive)
-		{
-			printf("%s\n", ifh_characteristics[i].flagName);
-		}
-	}
-
 	return cursor;
 }
 
@@ -441,33 +516,6 @@ DWORD parseSectionHeader(IMAGE_SECTION_HEADER *sectionHeader, UINT8 *lpBuffer, D
 	cursor += sizeof(WORD);
 	sectionHeader->Characteristics = convertToDword(lpBuffer + cursor);
 	cursor += sizeof(DWORD);
-
-	int count = 0;
-
-	for (int i = 0; i < NUMBER_OF_SECTION_CHARACTERISTICS; i++)
-	{
-		if (sectionHeader->Characteristics & section_characteristics[i].value)
-		{
-			section_characteristics[i].isActive = true;
-			count++;
-		}
-	}
-
-	if (count == 0)
-	{
-		printf("Invalid Characteristics value in IMAGE_SECTION_HEADER");
-		exit(-1);
-	}
-
-	printf("section %d\n", sectionNo);
-	for (int i = 0; i < NUMBER_OF_SECTION_CHARACTERISTICS; i++)
-	{
-		if (section_characteristics[i].isActive)
-		{
-			printf("%s\n", section_characteristics[i].flagName);
-			section_characteristics[i].isActive = false; // after printing, revert it back to false, maybe I should use an array and keep information of each section 
-		}
-	}
 
 	return cursor;
 }

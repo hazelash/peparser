@@ -41,6 +41,12 @@ int main()
 		exit(-1);
 	}
 
+	if ( fileSize < sizeof(IMAGE_DOS_HEADER) )
+	{
+		printf("The size of file seems be too small. [DOS]");
+		exit(-1);
+	}
+
 	UINT8 *lpBuffer = (UINT8 *)malloc(fileSize);
 	if (lpBuffer == NULL)
 	{
@@ -64,16 +70,36 @@ int main()
 	DWORD offsetToNewPe = dosHeader.e_lfanew;
 	cursor = offsetToNewPe;
 
+	if (fileSize <= cursor + sizeof(IMAGE_FILE_HEADER))
+	{
+		printf("Reached the end of file. [IFH]");
+		exit(-1);
+	}
+
 	memset(&ifh, 0x00, sizeof(IMAGE_FILE_HEADER));
 	cursor = parseImageFileHeader(&ifh, lpBuffer, cursor);
+	printFileHeader(&ifh);
 
 	// Note that the size of the optional header is not fixed. 
 	// The SizeOfOptionalHeader field in the COFF header must be used to validate that a probe into the file for a particular data directory does not go beyond SizeOfOptionalHeader. 
 	DWORD offsetToIOH = cursor;
+
+	if (fileSize < cursor + sizeof(DWORD))
+	{
+		printf("Reached to the end of file. [OPTMG]");
+		exit(-1);
+	}
+
 	WORD iohMagic = convertToWord(lpBuffer + cursor);
 
 	if (iohMagic == 0x10b)
 	{
+		if (fileSize < cursor + sizeof(IMAGE_OPTIONAL_HEADER32))
+		{
+			printf("Reached to the end of file. [OPT32]");
+			exit(-1);
+		}
+
 		memset(&ioh32, 0x00, sizeof(IMAGE_OPTIONAL_HEADER32));
 		cursor = parseImageOptionalHeader32(&ioh32, lpBuffer, cursor, ifh.SizeOfOptionalHeader);
 		printIOH32(&ioh32);
@@ -81,6 +107,12 @@ int main()
 
 	else if (iohMagic == 0x20b)
 	{
+		if (fileSize < cursor + sizeof(IMAGE_OPTIONAL_HEADER64))
+		{
+			printf("Reached to the end of file. [OPT64]");
+			exit(-1);
+		}
+
 		memset(&ioh64, 0x00, sizeof(IMAGE_OPTIONAL_HEADER64));
 		cursor = parseImageOptionalHeader64(&ioh64, lpBuffer, cursor, ifh.SizeOfOptionalHeader);
 		printIOH64(&ioh64);
@@ -96,16 +128,20 @@ int main()
 
 	if (ifh.NumberOfSections != 0)
 	{
+		if (fileSize < cursor + sizeof(IMAGE_SECTION_HEADER) * ifh.NumberOfSections) 
+		{
+			printf("Reached to the end of file. [ISH]");
+			exit(-1);
+		}
+
 		ish = (IMAGE_SECTION_HEADER *)malloc(sizeof(IMAGE_SECTION_HEADER) * ifh.NumberOfSections);
 	}
-	
 
 	for (int i = 0; i < ifh.NumberOfSections; i++)
 	{
 		cursor = parseSectionHeader(&ish[i], lpBuffer, cursor, i);
+		printSectionHeader(&ish[i], i);
 	}
-
-
 
 	return 0;
 }
