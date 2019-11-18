@@ -1,6 +1,6 @@
-#include "pch.h"
-#include "../pe/ds.h"
-#include "../pe/functions.h"
+#include "stdafx.h"
+#include "../peparser/ds.h"
+#include "../peparser/functions.h"
 #include <stdio.h>
 #include <windows.h>
 #include <winnt.h>
@@ -16,11 +16,7 @@ int main()
 	IMAGE_FILE_HEADER ifh;
 	IMAGE_OPTIONAL_HEADER32 ioh32;
 	IMAGE_OPTIONAL_HEADER64 ioh64;
-
-	memset(&dosHeader, 0x00, sizeof(IMAGE_DOS_HEADER));
-	memset(&ifh, 0x00, sizeof(IMAGE_FILE_HEADER));
-	memset(&ioh32, 0x00, sizeof(IMAGE_OPTIONAL_HEADER32));
-	memset(&ioh64, 0x00, sizeof(IMAGE_OPTIONAL_HEADER64));
+	
 
 	LPCWSTR cmdline = GetCommandLineW();
 
@@ -59,26 +55,33 @@ int main()
 		exit(-1);
 	}
 
+	memset(&dosHeader, 0x00, sizeof(IMAGE_DOS_HEADER));
 	cursor = parseDosHeader(&dosHeader, lpBuffer, cursor);
 
-	DWORD sizeOfDosStub = dosHeader.e_lfanew - cursor;
+	printDosHeader(&dosHeader, 0);
 
-	cursor = dosHeader.e_lfanew;
+	DWORD offsetToDosStub = cursor;
+	DWORD offsetToNewPe = dosHeader.e_lfanew;
+	cursor = offsetToNewPe;
+
+	memset(&ifh, 0x00, sizeof(IMAGE_FILE_HEADER));
 	cursor = parseImageFileHeader(&ifh, lpBuffer, cursor);
 
 	// Note that the size of the optional header is not fixed. 
 	// The SizeOfOptionalHeader field in the COFF header must be used to validate that a probe into the file for a particular data directory does not go beyond SizeOfOptionalHeader. 
-
+	DWORD offsetToIOH = cursor;
 	WORD iohMagic = convertToWord(lpBuffer + cursor);
 
 	if (iohMagic == 0x10b)
 	{
+		memset(&ioh32, 0x00, sizeof(IMAGE_OPTIONAL_HEADER32));
 		cursor = parseImageOptionalHeader32(&ioh32, lpBuffer, cursor, ifh.SizeOfOptionalHeader);
 		printIOH32(&ioh32);
 	}
 
 	else if (iohMagic == 0x20b)
 	{
+		memset(&ioh64, 0x00, sizeof(IMAGE_OPTIONAL_HEADER64));
 		cursor = parseImageOptionalHeader64(&ioh64, lpBuffer, cursor, ifh.SizeOfOptionalHeader);
 		printIOH64(&ioh64);
 	}
@@ -88,6 +91,21 @@ int main()
 		printf("Invalid Magic value in IMAGE_OPTIONAL_HEADER");
 		exit(-1);
 	}
+
+	IMAGE_SECTION_HEADER *ish = NULL;
+
+	if (ifh.NumberOfSections != 0)
+	{
+		ish = (IMAGE_SECTION_HEADER *)malloc(sizeof(IMAGE_SECTION_HEADER) * ifh.NumberOfSections);
+	}
+	
+
+	for (int i = 0; i < ifh.NumberOfSections; i++)
+	{
+		cursor = parseSectionHeader(&ish[i], lpBuffer, cursor, i);
+	}
+
+
 
 	return 0;
 }

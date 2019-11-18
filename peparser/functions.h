@@ -78,6 +78,12 @@ VOID printIOH32(IMAGE_OPTIONAL_HEADER32 *ioh32)
 	}
 }
 
+VOID printDosHeader(IMAGE_DOS_HEADER *dosHeader, DWORD baseOffset)
+{
+	// printf("%016I64x, %x", (void **)dosHeader, dosHeader->e_magic);
+	printf("TODO\n");
+}
+
 VOID printIOH64(IMAGE_OPTIONAL_HEADER64 *ioh64)
 {
 	printf("Magic	%08x\n", ioh64->Magic);
@@ -88,7 +94,7 @@ VOID printIOH64(IMAGE_OPTIONAL_HEADER64 *ioh64)
 	printf("SizeOfUninitializedData	%08x\n", ioh64->SizeOfUninitializedData);
 	printf("AddressOfEntryPoint	%08x\n", ioh64->AddressOfEntryPoint);
 	printf("BaseOfCode	%08x\n", ioh64->BaseOfCode);
-	printf("ImageBase	%I64x\n", ioh64->ImageBase);
+	printf("ImageBase	%016I64x\n", ioh64->ImageBase);
 	printf("SectionAlignment	%08x\n", ioh64->SectionAlignment);
 	printf("FileAlignment	%08x\n", ioh64->FileAlignment);
 	printf("MajorOperatingSystemVersion	%08x\n", ioh64->MajorOperatingSystemVersion);
@@ -103,15 +109,16 @@ VOID printIOH64(IMAGE_OPTIONAL_HEADER64 *ioh64)
 	printf("CheckSum	%08x\n", ioh64->CheckSum);
 	printf("Subsystem	%08x\n", ioh64->Subsystem);
 	printf("DllCharacteristics	%08x\n", ioh64->DllCharacteristics);
-	printf("SizeOfStackReserve	%I64x\n", ioh64->SizeOfStackReserve);
-	printf("SizeOfStackCommit	%I64x\n", ioh64->SizeOfStackCommit);
-	printf("SizeOfHeapReserve	%I64x\n", ioh64->SizeOfHeapReserve);
-	printf("SizeOfHeapCommit	%I64x\n", ioh64->SizeOfHeapCommit);
+	printf("SizeOfStackReserve	%016I64x\n", ioh64->SizeOfStackReserve);
+	printf("SizeOfStackCommit	%016I64x\n", ioh64->SizeOfStackCommit);
+	printf("SizeOfHeapReserve	%016I64x\n", ioh64->SizeOfHeapReserve);
+	printf("SizeOfHeapCommit	%016I64x\n", ioh64->SizeOfHeapCommit);
 	printf("LoaderFlags	%08x\n", ioh64->LoaderFlags);
 	printf("NumberOfRvaAndSizes	%08x\n", ioh64->NumberOfRvaAndSizes);
 
 	for (DWORD i = 0; i < ioh64->NumberOfRvaAndSizes; i++)
 	{
+		printf("%25s: ", idd_names[i].fieldName);
 		printf("%08X | ", ioh64->DataDirectory[i].VirtualAddress);
 		printf("%08X\n", ioh64->DataDirectory[i].Size);
 	}
@@ -327,7 +334,6 @@ DWORD parseDosHeader(IMAGE_DOS_HEADER *dosHeader, UINT8 *lpBuffer, DWORD cursor)
 	return cursor;
 }
 
-
 DWORD parseImageFileHeader(IMAGE_FILE_HEADER *ifh, UINT8 *lpBuffer, DWORD cursor)
 {
 	DWORD ntSignature = convertToDword(lpBuffer + cursor);
@@ -340,6 +346,7 @@ DWORD parseImageFileHeader(IMAGE_FILE_HEADER *ifh, UINT8 *lpBuffer, DWORD cursor
 	cursor += sizeof(DWORD);
 
 	ifh->Machine = convertToWord(lpBuffer + cursor);
+	ids[0].fieldValue = (void **)ifh->Machine;
 	cursor += sizeof(WORD);
 
 	bool typecheck = false;
@@ -385,11 +392,12 @@ DWORD parseImageFileHeader(IMAGE_FILE_HEADER *ifh, UINT8 *lpBuffer, DWORD cursor
 	cursor += sizeof(WORD);
 
 	int count = 0;
-	for (int i = 0; i < NUMBER_OF_CHARACTERISTICS; i++)
+
+	for (int i = 0; i < NUMBER_OF_IFH_CHARACTERISTICS; i++)
 	{
-		if (ifh->Characteristics & ihfc[i].value)
+		if (ifh->Characteristics & ifh_characteristics[i].value)
 		{
-			ihfc[i].isActive = true;
+			ifh_characteristics[i].isActive = true;
 			count++;
 		}
 	}
@@ -400,12 +408,67 @@ DWORD parseImageFileHeader(IMAGE_FILE_HEADER *ifh, UINT8 *lpBuffer, DWORD cursor
 		exit(-1);
 	}
 
-	for (int i = 0; i < NUMBER_OF_CHARACTERISTICS; i++)
+	for (int i = 0; i < NUMBER_OF_IFH_CHARACTERISTICS; i++)
 	{
-		if (ihfc[i].isActive)
+		if (ifh_characteristics[i].isActive)
 		{
-			printf("%s\n", ihfc[i].flagName);
+			printf("%s\n", ifh_characteristics[i].flagName);
 		}
 	}
+
 	return cursor;
 }
+
+DWORD parseSectionHeader(IMAGE_SECTION_HEADER *sectionHeader, UINT8 *lpBuffer, DWORD cursor, DWORD sectionNo)
+{
+	memcpy(sectionHeader->Name, lpBuffer + cursor, IMAGE_SIZEOF_SHORT_NAME);
+	cursor += IMAGE_SIZEOF_SHORT_NAME;
+	sectionHeader->Misc.VirtualSize = convertToDword(lpBuffer + cursor);
+	cursor += sizeof(DWORD);
+	sectionHeader->VirtualAddress = convertToDword(lpBuffer + cursor);
+	cursor += sizeof(DWORD);
+	sectionHeader->SizeOfRawData = convertToDword(lpBuffer + cursor);
+	cursor += sizeof(DWORD);
+	sectionHeader->PointerToRawData = convertToDword(lpBuffer + cursor);
+	cursor += sizeof(DWORD);
+	sectionHeader->PointerToRelocations = convertToDword(lpBuffer + cursor);
+	cursor += sizeof(DWORD);
+	sectionHeader->PointerToLinenumbers = convertToDword(lpBuffer + cursor);
+	cursor += sizeof(DWORD);
+	sectionHeader->NumberOfRelocations = convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+	sectionHeader->NumberOfLinenumbers = convertToWord(lpBuffer + cursor);
+	cursor += sizeof(WORD);
+	sectionHeader->Characteristics = convertToDword(lpBuffer + cursor);
+	cursor += sizeof(DWORD);
+
+	int count = 0;
+
+	for (int i = 0; i < NUMBER_OF_SECTION_CHARACTERISTICS; i++)
+	{
+		if (sectionHeader->Characteristics & section_characteristics[i].value)
+		{
+			section_characteristics[i].isActive = true;
+			count++;
+		}
+	}
+
+	if (count == 0)
+	{
+		printf("Invalid Characteristics value in IMAGE_SECTION_HEADER");
+		exit(-1);
+	}
+
+	printf("section %d\n", sectionNo);
+	for (int i = 0; i < NUMBER_OF_SECTION_CHARACTERISTICS; i++)
+	{
+		if (section_characteristics[i].isActive)
+		{
+			printf("%s\n", section_characteristics[i].flagName);
+			section_characteristics[i].isActive = false; // after printing, revert it back to false, maybe I should use an array and keep information of each section 
+		}
+	}
+
+	return cursor;
+}
+
