@@ -38,20 +38,46 @@ WORD convertToWord(UINT8 *buffer)
 	return res;
 }
 
+DWORD ceiling(DWORD number, DWORD unit)
+{
+	DWORD remainder = number % unit;
+	DWORD quotient = number / unit;
+
+	if (remainder < unit)
+	{
+		return (quotient + 1) * unit;
+	}
+
+	else 
+	{
+		return number;
+	}
+}
+
+VOID printBigLine()
+{
+	printf("=============================================\n");
+}
+
+VOID printSmallLine()
+{
+	printf("- - - - - - - - - - - - - - - - - - - - - - -\n");
+}
+
 VOID printDosHeader(IMAGE_DOS_HEADER *dosHeader, DWORD baseOffset)
 {
 	// printf("%016I64x, %x", (void **)dosHeader, dosHeader->e_magic);
-	printf("=============================================\n");
+	printBigLine();
 	printf("IMAGE_DOS_HEADER (TODO)\n");
-	printf("=============================================\n");
+	printBigLine();
 
 }
 
 VOID printFileHeader(IMAGE_FILE_HEADER *ifh)
 {
-	printf("=============================================\n");
+	printBigLine();
 	printf("IMAGE_FILE_HEADER\n");
-	printf("=============================================\n");
+	printBigLine();
 
 	printf("%-36s %04x\n", "Machine", ifh->Machine);
 	printf("%-36s %04x\n", "NumberOfSections", ifh->NumberOfSections);
@@ -60,7 +86,7 @@ VOID printFileHeader(IMAGE_FILE_HEADER *ifh)
 	printf("%-36s %08x\n", "NumberOfSymbols", ifh->NumberOfSymbols);
 	printf("%-36s %04x\n", "SizeOfOptionalHeader", ifh->SizeOfOptionalHeader);
 	printf("%-36s %04x\n", "Characteristics", ifh->Characteristics);
-	printf("- - - - - - - - - - - - - - - - - - - - - - -\n");
+	printSmallLine();
 
 	int count = 0;
 
@@ -91,9 +117,9 @@ VOID printFileHeader(IMAGE_FILE_HEADER *ifh)
 
 VOID printIOH32(IMAGE_OPTIONAL_HEADER32 *ioh32)
 {
-	printf("=============================================\n");
+	printBigLine();
 	printf("IMAGE_OPTIONAL_HEADER32\n");
-	printf("=============================================\n");
+	printBigLine();
 
 	printf("%-36s %08x\n", "Magic", ioh32->Magic);
 	printf("%-36s %04x\n", "MajorLinkerVersion", ioh32->MajorLinkerVersion);
@@ -124,7 +150,7 @@ VOID printIOH32(IMAGE_OPTIONAL_HEADER32 *ioh32)
 	printf("%-36s %08x\n", "SizeOfHeapCommit", ioh32->SizeOfHeapCommit);
 	printf("%-36s %08x\n", "LoaderFlags", ioh32->LoaderFlags);
 	printf("%-36s %08x\n", "NumberOfRvaAndSizes", ioh32->NumberOfRvaAndSizes);
-	printf("- - - - - - - - - - - - - - - - - - - - - - -\n");
+	printSmallLine();
 
 	for (DWORD i = 0; i < ioh32->NumberOfRvaAndSizes; i++)
 	{
@@ -136,9 +162,9 @@ VOID printIOH32(IMAGE_OPTIONAL_HEADER32 *ioh32)
 
 VOID printIOH64(IMAGE_OPTIONAL_HEADER64 *ioh64)
 {
-	printf("=============================================\n");
+	printBigLine();
 	printf("IMAGE_OPTIONAL_HEADER64\n");
-	printf("=============================================\n");
+	printBigLine();
 
 	printf("%-36s %08x\n", "Magic", ioh64->Magic);
 	printf("%-36s %04x\n", "MajorLinkerVersion", ioh64->MajorLinkerVersion);
@@ -169,7 +195,7 @@ VOID printIOH64(IMAGE_OPTIONAL_HEADER64 *ioh64)
 	printf("%-36s %016I64x\n", "SizeOfHeapCommit", ioh64->SizeOfHeapCommit);
 	printf("%-36s %08x\n", "LoaderFlags", ioh64->LoaderFlags);
 	printf("%-36s %08x\n", "NumberOfRvaAndSizes", ioh64->NumberOfRvaAndSizes);
-	printf("- - - - - - - - - - - - - - - - - - - - - - -\n");
+	printSmallLine();
 
 	for (DWORD i = 0; i < ioh64->NumberOfRvaAndSizes; i++)
 	{
@@ -182,9 +208,9 @@ VOID printIOH64(IMAGE_OPTIONAL_HEADER64 *ioh64)
 
 VOID printSectionHeader(IMAGE_SECTION_HEADER *sectionHeader, DWORD sectionNo)
 {
-	printf("=============================================\n");
+	printBigLine();
 	printf("IMAGE_SECTION_HEADER [%d]\n", sectionNo);
-	printf("=============================================\n");
+	printBigLine();
 
 	printf("%-36s %s\n", "Name", sectionHeader->Name);
 	printf("%-36s %08x\n", "VirtualSize", sectionHeader->Misc.VirtualSize);
@@ -196,7 +222,7 @@ VOID printSectionHeader(IMAGE_SECTION_HEADER *sectionHeader, DWORD sectionNo)
 	printf("%-36s %04x\n", "NumberOfRelocations", sectionHeader->NumberOfRelocations);
 	printf("%-36s %04x\n", "PointerToLinenumbers", sectionHeader->PointerToLinenumbers);
 	printf("%-36s %08x\n", "Characteristics", sectionHeader->Characteristics);
-	printf("- - - - - - - - - - - - - - - - - - - - - - -\n");
+	printSmallLine();
 
 	int count = 0;
 

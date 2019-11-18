@@ -5,6 +5,8 @@
 #include <windows.h>
 #include <winnt.h>
 
+#define MIN_READ_SIZE 0x400
+
 int main()
 {
 	DWORD elfanew = 0;
@@ -14,9 +16,9 @@ int main()
 
 	IMAGE_DOS_HEADER dosHeader;
 	IMAGE_FILE_HEADER ifh;
+
 	IMAGE_OPTIONAL_HEADER32 ioh32;
 	IMAGE_OPTIONAL_HEADER64 ioh64;
-	
 
 	LPCWSTR cmdline = GetCommandLineW();
 
@@ -41,21 +43,22 @@ int main()
 		exit(-1);
 	}
 
-	if ( fileSize < sizeof(IMAGE_DOS_HEADER) )
+	if ( fileSize < MIN_READ_SIZE)
 	{
-		printf("The size of file seems be too small. [DOS]");
+		printf("The size of file seems be too small. (minimum)");
 		exit(-1);
 	}
 
-	UINT8 *lpBuffer = (UINT8 *)malloc(fileSize);
+	UINT8 *lpBuffer = (UINT8 *)malloc(MIN_READ_SIZE);
+
 	if (lpBuffer == NULL)
 	{
 		printf("unexpected result from malloc");
 		exit(-1);
 	}
 
-	BOOL res = ReadFile(hSrcFile, lpBuffer, fileSize, &dwordRef, 0);
-	if (dwordRef != fileSize || res == FALSE)
+	BOOL res = ReadFile(hSrcFile, lpBuffer, MIN_READ_SIZE, &dwordRef, 0);
+	if (dwordRef != MIN_READ_SIZE || res == FALSE)
 	{
 		printf("unexpected result from ReadFile");
 		exit(-1);
@@ -68,11 +71,12 @@ int main()
 
 	DWORD offsetToDosStub = cursor;
 	DWORD offsetToNewPe = dosHeader.e_lfanew;
+	DWORD sectionAlignment = 0;
 	cursor = offsetToNewPe;
 
-	if (fileSize <= cursor + sizeof(IMAGE_FILE_HEADER))
+	if ( cursor + sizeof(IMAGE_FILE_HEADER) > MIN_READ_SIZE )
 	{
-		printf("Reached the end of file. [IFH]");
+		printf("Not sufficient buffer to read IMAGE_FILE_HEADER");
 		exit(-1);
 	}
 
@@ -84,38 +88,40 @@ int main()
 	// The SizeOfOptionalHeader field in the COFF header must be used to validate that a probe into the file for a particular data directory does not go beyond SizeOfOptionalHeader. 
 	DWORD offsetToIOH = cursor;
 
-	if (fileSize < cursor + sizeof(DWORD))
+	if (cursor + sizeof(DWORD) > MIN_READ_SIZE)
 	{
-		printf("Reached to the end of file. [OPTMG]");
+		printf("Not sufficient buffer to read Optional_Magic");
 		exit(-1);
 	}
-
+	
 	WORD iohMagic = convertToWord(lpBuffer + cursor);
 
 	if (iohMagic == 0x10b)
 	{
-		if (fileSize < cursor + sizeof(IMAGE_OPTIONAL_HEADER32))
+		if (cursor + sizeof(IMAGE_OPTIONAL_HEADER32) > MIN_READ_SIZE)
 		{
-			printf("Reached to the end of file. [OPT32]");
+			printf("Not sufficient buffer to read IMAGE_OPTIONAL_HEADER32");
 			exit(-1);
 		}
 
 		memset(&ioh32, 0x00, sizeof(IMAGE_OPTIONAL_HEADER32));
 		cursor = parseImageOptionalHeader32(&ioh32, lpBuffer, cursor, ifh.SizeOfOptionalHeader);
 		printIOH32(&ioh32);
+		sectionAlignment = ioh32.SectionAlignment;
 	}
 
 	else if (iohMagic == 0x20b)
 	{
-		if (fileSize < cursor + sizeof(IMAGE_OPTIONAL_HEADER64))
+		if (cursor + sizeof(IMAGE_OPTIONAL_HEADER64) > MIN_READ_SIZE)
 		{
-			printf("Reached to the end of file. [OPT64]");
+			printf("Not sufficient buffer to read IMAGE_OPTIONAL_HEADER64");
 			exit(-1);
 		}
 
 		memset(&ioh64, 0x00, sizeof(IMAGE_OPTIONAL_HEADER64));
 		cursor = parseImageOptionalHeader64(&ioh64, lpBuffer, cursor, ifh.SizeOfOptionalHeader);
 		printIOH64(&ioh64);
+		sectionAlignment = ioh64.SectionAlignment;
 	}
 
 	else
@@ -128,9 +134,9 @@ int main()
 
 	if (ifh.NumberOfSections != 0)
 	{
-		if (fileSize < cursor + sizeof(IMAGE_SECTION_HEADER) * ifh.NumberOfSections) 
+		if (cursor + sizeof(IMAGE_SECTION_HEADER) * ifh.NumberOfSections > MIN_READ_SIZE)
 		{
-			printf("Reached to the end of file. [ISH]");
+			printf("Not sufficient buffer to read IMAGE_SECTION_HEADER");
 			exit(-1);
 		}
 
@@ -141,6 +147,58 @@ int main()
 	{
 		cursor = parseSectionHeader(&ish[i], lpBuffer, cursor, i);
 		printSectionHeader(&ish[i], i);
+	}
+
+	free(lpBuffer);
+	
+	printBigLine();
+
+	DWORD rawSizeSpecifiedInHeader = ish[ifh.NumberOfSections - 1].PointerToRawData + ish[ifh.NumberOfSections - 1].SizeOfRawData;
+	DWORD memorySpaceRequired = ceiling(ish[ifh.NumberOfSections - 1].VirtualAddress + ish[ifh.NumberOfSections - 1].Misc.VirtualSize, sectionAlignment);
+
+	if (fileSize == rawSizeSpecifiedInHeader)
+	{
+		printf("Ready to load the file");
+		//exit(-1);
+	} 
+	else if (fileSize < rawSizeSpecifiedInHeader)
+	{
+		printf("The File is incomplete / corrupted");
+		exit(-1);
+	} 
+	else if (fileSize > rawSizeSpecifiedInHeader)
+	{
+		// maybe consider file align 
+		printf("The file has overlay data (%08x bytes)", fileSize- rawSizeSpecifiedInHeader);
+		//exit(-1);
+	}
+
+	lpBuffer = (UINT8 *)malloc(fileSize);
+	memset(lpBuffer, 0x00, fileSize);
+
+	SetFilePointer(hSrcFile, 0, 0, 0);
+
+	res = ReadFile(hSrcFile, lpBuffer, fileSize, &dwordRef, 0);
+	if (dwordRef != fileSize || res == FALSE)
+	{
+		printf("unexpected result from ReadFile (full)");
+		exit(-1);
+	}
+
+	// map the file as it should be aligned in the memory
+
+	// first section
+
+	// ... section x
+
+	// import
+
+	// export
+
+	if (!CloseHandle(hSrcFile))
+	{
+		printf("[ERROR] Closing Handle.\n");
+		exit(-1);
 	}
 
 	return 0;
