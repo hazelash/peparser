@@ -115,7 +115,7 @@ VOID printFileHeader(IMAGE_FILE_HEADER *ifh)
 
 }
 
-VOID printIOH32(IMAGE_OPTIONAL_HEADER32 *ioh32)
+VOID printOptionalHeader32(IMAGE_OPTIONAL_HEADER32 *ioh32)
 {
 	printBigLine();
 	printf("IMAGE_OPTIONAL_HEADER32\n");
@@ -160,7 +160,7 @@ VOID printIOH32(IMAGE_OPTIONAL_HEADER32 *ioh32)
 	}
 }
 
-VOID printIOH64(IMAGE_OPTIONAL_HEADER64 *ioh64)
+VOID printOptionalHeader64(IMAGE_OPTIONAL_HEADER64 *ioh64)
 {
 	printBigLine();
 	printf("IMAGE_OPTIONAL_HEADER64\n");
@@ -251,149 +251,149 @@ VOID printSectionHeader(IMAGE_SECTION_HEADER *sectionHeader, DWORD sectionNo)
 
 }
 
-DWORD parseImageOptionalHeader32(IMAGE_OPTIONAL_HEADER32 *ioh32, UINT8 *lpBuffer, DWORD cursor, DWORD sizeOfOptionalHeader)
+DWORD parseImageOptionalHeader32(IMAGE_OPTIONAL_HEADER32 *ioh32, UINT8 *lpBuffer, DWORD dwCursor, DWORD sizeOfOptionalHeader)
 {
-	DWORD offsetToIOH = cursor;
-	ioh32->Magic = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh32->MajorLinkerVersion = lpBuffer[cursor++];
-	ioh32->MinorLinkerVersion = lpBuffer[cursor++];
-	ioh32->SizeOfCode = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->SizeOfInitializedData = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->SizeOfUninitializedData = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->AddressOfEntryPoint = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->BaseOfCode = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->BaseOfData = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->ImageBase = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->SectionAlignment = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->FileAlignment = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->MajorOperatingSystemVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh32->MinorOperatingSystemVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh32->MajorImageVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh32->MinorImageVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh32->MajorSubsystemVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh32->MinorSubsystemVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh32->Win32VersionValue = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->SizeOfImage = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->SizeOfHeaders = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->CheckSum = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->Subsystem = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh32->DllCharacteristics = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh32->SizeOfStackReserve = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->SizeOfStackCommit = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->SizeOfHeapReserve = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->SizeOfHeapCommit = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->LoaderFlags = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh32->NumberOfRvaAndSizes = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
+	DWORD offsetToIOH = dwCursor;
+	ioh32->Magic = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh32->MajorLinkerVersion = lpBuffer[dwCursor++];
+	ioh32->MinorLinkerVersion = lpBuffer[dwCursor++];
+	ioh32->SizeOfCode = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->SizeOfInitializedData = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->SizeOfUninitializedData = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->AddressOfEntryPoint = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->BaseOfCode = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->BaseOfData = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->ImageBase = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->SectionAlignment = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->FileAlignment = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->MajorOperatingSystemVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh32->MinorOperatingSystemVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh32->MajorImageVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh32->MinorImageVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh32->MajorSubsystemVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh32->MinorSubsystemVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh32->Win32VersionValue = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->SizeOfImage = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->SizeOfHeaders = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->CheckSum = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->Subsystem = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh32->DllCharacteristics = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh32->SizeOfStackReserve = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->SizeOfStackCommit = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->SizeOfHeapReserve = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->SizeOfHeapCommit = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->LoaderFlags = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh32->NumberOfRvaAndSizes = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
 
-	for (DWORD i = 0; i < ioh32->NumberOfRvaAndSizes && cursor - offsetToIOH < sizeOfOptionalHeader; i++)
+	for (DWORD i = 0; i < ioh32->NumberOfRvaAndSizes && dwCursor - offsetToIOH < sizeOfOptionalHeader; i++)
 	{
-		ioh32->DataDirectory[i].VirtualAddress = convertToDword(lpBuffer + cursor);
-		cursor += sizeof(DWORD);
-		ioh32->DataDirectory[i].Size = convertToDword(lpBuffer + cursor);
-		cursor += sizeof(DWORD);
+		ioh32->DataDirectory[i].VirtualAddress = convertToDword(lpBuffer + dwCursor);
+		dwCursor += sizeof(DWORD);
+		ioh32->DataDirectory[i].Size = convertToDword(lpBuffer + dwCursor);
+		dwCursor += sizeof(DWORD);
 	}
-	return cursor;
+	return dwCursor;
 }
 
-DWORD parseImageOptionalHeader64(IMAGE_OPTIONAL_HEADER64 *ioh64, UINT8 *lpBuffer, DWORD cursor, DWORD sizeOfOptionalHeader)
+DWORD parseImageOptionalHeader64(IMAGE_OPTIONAL_HEADER64 *ioh64, UINT8 *lpBuffer, DWORD dwCursor, DWORD sizeOfOptionalHeader)
 {
-	DWORD offsetToIOH = cursor;
-	ioh64->Magic = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh64->MajorLinkerVersion = lpBuffer[cursor++];
-	ioh64->MinorLinkerVersion = lpBuffer[cursor++];
-	ioh64->SizeOfCode = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->SizeOfInitializedData = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->SizeOfUninitializedData = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->AddressOfEntryPoint = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->BaseOfCode = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->ImageBase = convertToUlonglong(lpBuffer + cursor);
-	cursor += sizeof(ULONGLONG);
-	ioh64->SectionAlignment = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->FileAlignment = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->MajorOperatingSystemVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh64->MinorOperatingSystemVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh64->MajorImageVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh64->MinorImageVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh64->MajorSubsystemVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh64->MinorSubsystemVersion = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh64->Win32VersionValue = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->SizeOfImage = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->SizeOfHeaders = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->CheckSum = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->Subsystem = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh64->DllCharacteristics = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	ioh64->SizeOfStackReserve = convertToUlonglong(lpBuffer + cursor);
-	cursor += sizeof(ULONGLONG);
-	ioh64->SizeOfStackCommit = convertToUlonglong(lpBuffer + cursor);
-	cursor += sizeof(ULONGLONG);
-	ioh64->SizeOfHeapReserve = convertToUlonglong(lpBuffer + cursor);
-	cursor += sizeof(ULONGLONG);
-	ioh64->SizeOfHeapCommit = convertToUlonglong(lpBuffer + cursor);
-	cursor += sizeof(ULONGLONG);
-	ioh64->LoaderFlags = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	ioh64->NumberOfRvaAndSizes = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
+	DWORD offsetToIOH = dwCursor;
+	ioh64->Magic = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh64->MajorLinkerVersion = lpBuffer[dwCursor++];
+	ioh64->MinorLinkerVersion = lpBuffer[dwCursor++];
+	ioh64->SizeOfCode = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->SizeOfInitializedData = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->SizeOfUninitializedData = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->AddressOfEntryPoint = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->BaseOfCode = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->ImageBase = convertToUlonglong(lpBuffer + dwCursor);
+	dwCursor += sizeof(ULONGLONG);
+	ioh64->SectionAlignment = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->FileAlignment = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->MajorOperatingSystemVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh64->MinorOperatingSystemVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh64->MajorImageVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh64->MinorImageVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh64->MajorSubsystemVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh64->MinorSubsystemVersion = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh64->Win32VersionValue = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->SizeOfImage = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->SizeOfHeaders = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->CheckSum = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->Subsystem = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh64->DllCharacteristics = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	ioh64->SizeOfStackReserve = convertToUlonglong(lpBuffer + dwCursor);
+	dwCursor += sizeof(ULONGLONG);
+	ioh64->SizeOfStackCommit = convertToUlonglong(lpBuffer + dwCursor);
+	dwCursor += sizeof(ULONGLONG);
+	ioh64->SizeOfHeapReserve = convertToUlonglong(lpBuffer + dwCursor);
+	dwCursor += sizeof(ULONGLONG);
+	ioh64->SizeOfHeapCommit = convertToUlonglong(lpBuffer + dwCursor);
+	dwCursor += sizeof(ULONGLONG);
+	ioh64->LoaderFlags = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	ioh64->NumberOfRvaAndSizes = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
 
-	for (DWORD i = 0; i < ioh64->NumberOfRvaAndSizes && cursor - offsetToIOH < sizeOfOptionalHeader; i++)
+	for (DWORD i = 0; i < ioh64->NumberOfRvaAndSizes && dwCursor - offsetToIOH < sizeOfOptionalHeader; i++)
 	{
-		ioh64->DataDirectory[i].VirtualAddress = convertToDword(lpBuffer + cursor);
-		cursor += sizeof(DWORD);
-		ioh64->DataDirectory[i].Size = convertToDword(lpBuffer + cursor);
-		cursor += sizeof(DWORD);
+		ioh64->DataDirectory[i].VirtualAddress = convertToDword(lpBuffer + dwCursor);
+		dwCursor += sizeof(DWORD);
+		ioh64->DataDirectory[i].Size = convertToDword(lpBuffer + dwCursor);
+		dwCursor += sizeof(DWORD);
 	}
-	return cursor;
+	return dwCursor;
 }
 
-DWORD parseDosHeader(IMAGE_DOS_HEADER *dosHeader, UINT8 *lpBuffer, DWORD cursor)
+DWORD parseDosHeader(IMAGE_DOS_HEADER *dosHeader, UINT8 *lpBuffer, DWORD dwCursor)
 {
 	dosHeader->e_magic = convertToWord(lpBuffer);
 	if (dosHeader->e_magic != 0x5a4d)
@@ -402,78 +402,78 @@ DWORD parseDosHeader(IMAGE_DOS_HEADER *dosHeader, UINT8 *lpBuffer, DWORD cursor)
 		exit(-1);
 	}
 
-	cursor += sizeof(WORD);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_cblp = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_cblp = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_cp = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_cp = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_crlc = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_crlc = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_cparhdr = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_cparhdr = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_minalloc = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_minalloc = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_maxalloc = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_maxalloc = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_ss = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_ss = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_sp = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_sp = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_csum = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_csum = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_ip = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_ip = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_cs = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_cs = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_lfarlc = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_lfarlc = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	dosHeader->e_ovno = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	dosHeader->e_ovno = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
 	// dosHeader->e_res[4];	
-	cursor += sizeof(WORD) * 4;
+	dwCursor += sizeof(WORD) * 4;
 
 	// dosHeader->e_oemid;
-	cursor += sizeof(WORD);
+	dwCursor += sizeof(WORD);
 
 	// dosHeader->e_oeminfo;
-	cursor += sizeof(WORD);
+	dwCursor += sizeof(WORD);
 
 	// dosHeader->e_res2[10];
-	cursor += sizeof(WORD) * 10;
+	dwCursor += sizeof(WORD) * 10;
 
-	dosHeader->e_lfanew = convertToDword(lpBuffer + cursor);
+	dosHeader->e_lfanew = convertToDword(lpBuffer + dwCursor);
 
-	return cursor;
+	return dwCursor;
 }
 
-DWORD parseImageFileHeader(IMAGE_FILE_HEADER *ifh, UINT8 *lpBuffer, DWORD cursor)
+DWORD parseImageFileHeader(IMAGE_FILE_HEADER *ifh, UINT8 *lpBuffer, DWORD dwCursor)
 {
-	DWORD ntSignature = convertToDword(lpBuffer + cursor);
+	DWORD ntSignature = convertToDword(lpBuffer + dwCursor);
 	if (ntSignature != 0x4550)
 	{
 		printf("PE signature not found");
 		exit(-1);
 	}
 
-	cursor += sizeof(DWORD);
+	dwCursor += sizeof(DWORD);
 
-	ifh->Machine = convertToWord(lpBuffer + cursor);
+	ifh->Machine = convertToWord(lpBuffer + dwCursor);
 	ids[0].fieldValue = (void **)ifh->Machine;
-	cursor += sizeof(WORD);
+	dwCursor += sizeof(WORD);
 
 	bool typecheck = false;
 
@@ -492,57 +492,57 @@ DWORD parseImageFileHeader(IMAGE_FILE_HEADER *ifh, UINT8 *lpBuffer, DWORD cursor
 		exit(-1);
 	}
 
-	ifh->NumberOfSections = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	ifh->NumberOfSections = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	ifh->TimeDateStamp = convertToDword(lpBuffer + cursor);
+	ifh->TimeDateStamp = convertToDword(lpBuffer + dwCursor);
 	// [TODO] add conversion to realtime
-	cursor += sizeof(DWORD);
+	dwCursor += sizeof(DWORD);
 
 	// The file offset of the COFF symbol table, or zero if no COFF symbol table is present. 
 	// This value should be zero for an image because COFF debugging information is deprecated.
-	ifh->PointerToSymbolTable = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
+	ifh->PointerToSymbolTable = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
 
 	//The number of entries in the symbol table. This data can be used to locate the string table, which immediately follows the symbol table. 
 	// This value should be zero for an image because COFF debugging information is deprecated.
-	ifh->NumberOfSymbols = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
+	ifh->NumberOfSymbols = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
 
 	// The size of the optional header, which is required for executable files but not for object files. This value should be zero for an object file. 
 	// usual size x86: 0xE0, x64: 0xF0
-	ifh->SizeOfOptionalHeader = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	ifh->SizeOfOptionalHeader = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	ifh->Characteristics = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
+	ifh->Characteristics = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
 
-	return cursor;
+	return dwCursor;
 }
 
-DWORD parseSectionHeader(IMAGE_SECTION_HEADER *sectionHeader, UINT8 *lpBuffer, DWORD cursor, DWORD sectionNo)
+DWORD parseSectionHeader(IMAGE_SECTION_HEADER *sectionHeader, UINT8 *lpBuffer, DWORD dwCursor, DWORD sectionNo)
 {
-	memcpy(sectionHeader->Name, lpBuffer + cursor, IMAGE_SIZEOF_SHORT_NAME);
-	cursor += IMAGE_SIZEOF_SHORT_NAME;
-	sectionHeader->Misc.VirtualSize = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	sectionHeader->VirtualAddress = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	sectionHeader->SizeOfRawData = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	sectionHeader->PointerToRawData = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	sectionHeader->PointerToRelocations = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	sectionHeader->PointerToLinenumbers = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
-	sectionHeader->NumberOfRelocations = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	sectionHeader->NumberOfLinenumbers = convertToWord(lpBuffer + cursor);
-	cursor += sizeof(WORD);
-	sectionHeader->Characteristics = convertToDword(lpBuffer + cursor);
-	cursor += sizeof(DWORD);
+	memcpy(sectionHeader->Name, lpBuffer + dwCursor, IMAGE_SIZEOF_SHORT_NAME);
+	dwCursor += IMAGE_SIZEOF_SHORT_NAME;
+	sectionHeader->Misc.VirtualSize = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	sectionHeader->VirtualAddress = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	sectionHeader->SizeOfRawData = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	sectionHeader->PointerToRawData = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	sectionHeader->PointerToRelocations = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	sectionHeader->PointerToLinenumbers = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
+	sectionHeader->NumberOfRelocations = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	sectionHeader->NumberOfLinenumbers = convertToWord(lpBuffer + dwCursor);
+	dwCursor += sizeof(WORD);
+	sectionHeader->Characteristics = convertToDword(lpBuffer + dwCursor);
+	dwCursor += sizeof(DWORD);
 
-	return cursor;
+	return dwCursor;
 }
 
