@@ -171,9 +171,9 @@ typedef struct _IMAGE_DOS_HEADER_EXT
 	const char *fieldName;
 	void **fieldValue;
 	int size;
-} IDS;
+} DOS_HEADER_EXT;
 
-IDS ids[7] = {
+DOS_HEADER_EXT ids[7] = {
 	{ 0, "Machine", 0x00, 2},
 	{ 2, "NumberOfSections", 0x00, 2},
 	{ 4, "TimeDateStamp", 0x00, 4},

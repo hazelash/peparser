@@ -25,27 +25,27 @@ int main()
 	LPWSTR *args = CommandLineToArgvW(cmdline, &nNumArgs);
 	if (nNumArgs != 2 || args == NULL)
 	{
-		printf("unexpected result from CommandLineToArgvW");
+		printf("unexpected result from CommandLineToArgvW\n");
 		exit(-1);
 	}
 
 	HANDLE hSrcFile = CreateFileW(args[1], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hSrcFile == INVALID_HANDLE_VALUE)
 	{
-		printf("unexpected result from CreateFileW");
+		printf("unexpected result from CreateFileW\n");
 		exit(-1);
 	}
 
 	DWORD fileSize = GetFileSize(hSrcFile, &dwRefSize);
 	if (fileSize == INVALID_FILE_SIZE)
 	{
-		printf("unexpected result from GetFileSize");
+		printf("unexpected result from GetFileSize\n");
 		exit(-1);
 	}
 
 	if ( fileSize < MIN_READ_SIZE)
 	{
-		printf("The size of file seems be too small. (minimum)");
+		printf("The size of file seems be too small. (minimum)\n");
 		exit(-1);
 	}
 
@@ -53,14 +53,14 @@ int main()
 
 	if (lpBuffer == NULL)
 	{
-		printf("unexpected result from malloc");
+		printf("unexpected result from malloc\n");
 		exit(-1);
 	}
 
 	BOOL res = ReadFile(hSrcFile, lpBuffer, fileSize, &dwRefSize, 0);
 	if (dwRefSize != fileSize || res == FALSE)
 	{
-		printf("unexpected result from ReadFile");
+		printf("unexpected result from ReadFile\n");
 		exit(-1);
 	}
 
@@ -76,7 +76,7 @@ int main()
 
 	if ( dwCursor + sizeof(IMAGE_FILE_HEADER) > fileSize)
 	{
-		printf("Not sufficient buffer to read IMAGE_FILE_HEADER");
+		printf("Not sufficient buffer to read IMAGE_FILE_HEADER\n");
 		exit(-1);
 	}
 
@@ -90,7 +90,7 @@ int main()
 
 	if (dwCursor + sizeof(DWORD) > fileSize)
 	{
-		printf("Not sufficient buffer to read Optional_Magic");
+		printf("Not sufficient buffer to read Optional_Magic\n");
 		exit(-1);
 	}
 	
@@ -100,7 +100,7 @@ int main()
 	{
 		if (dwCursor + sizeof(IMAGE_OPTIONAL_HEADER32) > fileSize)
 		{
-			printf("Not sufficient buffer to read IMAGE_OPTIONAL_HEADER32");
+			printf("Not sufficient buffer to read IMAGE_OPTIONAL_HEADER32\n");
 			exit(-1);
 		}
 
@@ -114,7 +114,7 @@ int main()
 	{
 		if (dwCursor + sizeof(IMAGE_OPTIONAL_HEADER64) > fileSize)
 		{
-			printf("Not sufficient buffer to read IMAGE_OPTIONAL_HEADER64");
+			printf("Not sufficient buffer to read IMAGE_OPTIONAL_HEADER64\n");
 			exit(-1);
 		}
 
@@ -126,7 +126,7 @@ int main()
 
 	else
 	{
-		printf("Invalid Magic value in IMAGE_OPTIONAL_HEADER");
+		printf("Invalid Magic value in IMAGE_OPTIONAL_HEADER\n");
 		exit(-1);
 	}
 
@@ -136,7 +136,7 @@ int main()
 	{
 		if (dwCursor + sizeof(IMAGE_SECTION_HEADER) * stFileHeader.NumberOfSections > fileSize)
 		{
-			printf("Not sufficient buffer to read IMAGE_SECTION_HEADER");
+			printf("Not sufficient buffer to read IMAGE_SECTION_HEADER\n");
 			exit(-1);
 		}
 
@@ -156,31 +156,32 @@ int main()
 
 	if (fileSize == dwTotalRawSize)
 	{
-		printf("Ready to load the file");
+		printf("Ready to load the file\n");
 		//exit(-1);
 	} 
 	else if (fileSize < dwTotalRawSize)
 	{
-		printf("The File is incomplete / corrupted");
+		printf("The File is incomplete / corrupted\n");
 		exit(-1);
 	} 
 	else if (fileSize > dwTotalRawSize)
 	{
 		// maybe consider file align 
-		printf("The file has overlay data (%08x bytes)", fileSize - dwTotalRawSize);
+		printf("The file has overlay data (%08x bytes)\n", fileSize - dwTotalRawSize);
 		//exit(-1);
 	}
 
 	// map the file as it should be aligned in the memory (becomes easier to navigate with RVA)
 	LPVOID lpvBaseAddr = NULL;
-	LPVOID dwNewBase = NULL;
+	DWORD dwNewBase = NULL;
 	DWORD dwOffsetMem = 0;
 	DWORD dwOffsetFile = 0;
+	DWORD dwTemp = 0;
 
 	lpvBaseAddr = VirtualAlloc(0, dwTotalVirtualSize, MEM_COMMIT, PAGE_READWRITE);
 	if (lpvBaseAddr == NULL)
 	{
-		printf("[ERROR] VirtualAlloc");
+		printf("[ERROR] VirtualAlloc\n");
 		exit(-1);
 	}
 
@@ -191,13 +192,65 @@ int main()
 	// Copy contents of each section 
 	for (int i = 0; i < stFileHeader.NumberOfSections; i++)
 	{
-		dwNewBase = (LPVOID)((DWORD)lpvBaseAddr + dwOffsetMem);
+		dwNewBase = addDwordToLpvoid(lpvBaseAddr, dwOffsetMem);
+		if ((DWORD)lpvBaseAddr+dwTotalVirtualSize < dwNewBase)
+		{
+			printf("[ERROR] out of bound [1]\n");
+			exit(-1);
+		}
+
 		dwOffsetFile = ish[i].PointerToRawData;
-		memcpy(dwNewBase, lpBuffer + dwOffsetFile, ish[i].SizeOfRawData);
+		memcpy((LPVOID)dwNewBase, lpBuffer + dwOffsetFile, ish[i].SizeOfRawData);
 		dwOffsetMem += ceiling(ish[i].Misc.VirtualSize, dwMemAlign);
 	}
 
+	DWORD dwIDTSize = 0;
+
 	// import
+	if (iohMagic == 0x10b)
+	{
+		dwCursor = addDwordToLpvoid(lpvBaseAddr, stOptionalHeader32.DataDirectory[1].VirtualAddress);
+		if ((DWORD)lpvBaseAddr + dwTotalVirtualSize < dwCursor)
+		{
+			printf("[ERROR] out of bound [2]\n");
+			exit(-1);
+		}
+		dwIDTSize = stOptionalHeader32.DataDirectory[1].Size;
+	}
+	else if (iohMagic == 0x20b)
+	{
+		dwCursor = addDwordToLpvoid(lpvBaseAddr, stOptionalHeader64.DataDirectory[1].VirtualAddress);
+		if ((DWORD)lpvBaseAddr + dwTotalVirtualSize < dwCursor)
+		{
+			printf("[ERROR] out of bound [2-2]\n");
+			exit(-1);
+		}
+		dwIDTSize = stOptionalHeader64.DataDirectory[1].Size;
+	}
+	else 
+	{
+		// this won't happen but just keeping
+	}
+
+	// just testing the first iteration now 
+	IMAGE_IMPORT_DESCRIPTOR stIDT;
+
+	memcpy(&stIDT.OriginalFirstThunk, (LPVOID)dwCursor, sizeof(DWORD));
+	dwCursor += sizeof(DWORD);
+	memcpy(&stIDT.TimeDateStamp, (LPVOID)(dwCursor), sizeof(DWORD));
+	dwCursor += sizeof(DWORD);
+	memcpy(&stIDT.ForwarderChain, (LPVOID)(dwCursor), sizeof(DWORD));
+	dwCursor += sizeof(DWORD);
+	memcpy(&stIDT.Name, (LPVOID)(dwCursor), sizeof(DWORD));
+	dwCursor += sizeof(DWORD);
+	memcpy(&stIDT.FirstThunk, (LPVOID)(dwCursor), sizeof(DWORD));
+	dwCursor += sizeof(DWORD);
+
+	printf("%-36s %08x\n", "[1]", stIDT.OriginalFirstThunk);
+	printf("%-36s %08x\n", "[1]", stIDT.TimeDateStamp);
+	printf("%-36s %08x\n", "[1]", stIDT.ForwarderChain);
+	printf("%-36s %08x\n", "[1]", stIDT.Name);
+	printf("%-36s %08x\n", "[1]", stIDT.FirstThunk);
 
 	// export
 

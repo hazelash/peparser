@@ -54,6 +54,12 @@ DWORD ceiling(DWORD number, DWORD unit)
 	}
 }
 
+DWORD addDwordToLpvoid(LPVOID base, DWORD adjustment)
+{
+	// bound check 
+	return (DWORD)base + adjustment;
+}
+
 VOID printBigLine()
 {
 	printf("=============================================\n");
