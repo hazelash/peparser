@@ -5,7 +5,8 @@
 #include <windows.h>
 #include <winnt.h>
 
-#define MIN_READ_SIZE 0x400
+#define MIN_READ_SIZE	0x400
+#define MAX_STRING_SIZE	0x100
 
 int main()
 {
@@ -232,25 +233,147 @@ int main()
 		// this won't happen but just keeping
 	}
 
-	// just testing the first iteration now 
-	IMAGE_IMPORT_DESCRIPTOR stIDT;
+	int dwNumIDTEntries = dwIDTSize / (sizeof(DWORD) * 5);
+	IMAGE_IMPORT_DESCRIPTOR *stIDT = NULL;
+	DWORD dwCount = 0;
 
-	memcpy(&stIDT.OriginalFirstThunk, (LPVOID)dwCursor, sizeof(DWORD));
-	dwCursor += sizeof(DWORD);
-	memcpy(&stIDT.TimeDateStamp, (LPVOID)(dwCursor), sizeof(DWORD));
-	dwCursor += sizeof(DWORD);
-	memcpy(&stIDT.ForwarderChain, (LPVOID)(dwCursor), sizeof(DWORD));
-	dwCursor += sizeof(DWORD);
-	memcpy(&stIDT.Name, (LPVOID)(dwCursor), sizeof(DWORD));
-	dwCursor += sizeof(DWORD);
-	memcpy(&stIDT.FirstThunk, (LPVOID)(dwCursor), sizeof(DWORD));
-	dwCursor += sizeof(DWORD);
+	stIDT = (IMAGE_IMPORT_DESCRIPTOR *) malloc (sizeof(IMAGE_IMPORT_DESCRIPTOR) * dwNumIDTEntries);
 
-	printf("%-36s %08x\n", "[1]", stIDT.OriginalFirstThunk);
-	printf("%-36s %08x\n", "[1]", stIDT.TimeDateStamp);
-	printf("%-36s %08x\n", "[1]", stIDT.ForwarderChain);
-	printf("%-36s %08x\n", "[1]", stIDT.Name);
-	printf("%-36s %08x\n", "[1]", stIDT.FirstThunk);
+	for (int i = 0; i < dwNumIDTEntries; i++)
+	{
+		memcpy(&stIDT[i].OriginalFirstThunk, (LPVOID)dwCursor, sizeof(DWORD));
+		dwCursor += sizeof(DWORD);
+		memcpy(&stIDT[i].TimeDateStamp, (LPVOID)(dwCursor), sizeof(DWORD));
+		dwCursor += sizeof(DWORD);
+		memcpy(&stIDT[i].ForwarderChain, (LPVOID)(dwCursor), sizeof(DWORD));
+		dwCursor += sizeof(DWORD);
+		memcpy(&stIDT[i].Name, (LPVOID)(dwCursor), sizeof(DWORD));
+		dwCursor += sizeof(DWORD);
+		memcpy(&stIDT[i].FirstThunk, (LPVOID)(dwCursor), sizeof(DWORD));
+		dwCursor += sizeof(DWORD);
+
+		// end case of IDT (entries are all null)
+		if (stIDT[i].OriginalFirstThunk == 0x00000000 && stIDT[i].FirstThunk == 0x00000000)
+		{
+			break;
+		}
+
+
+		dwTemp = addDwordToLpvoid(lpvBaseAddr, stIDT[i].Name);
+		if ((DWORD)lpvBaseAddr + dwTotalVirtualSize < dwTemp)
+		{
+			printf("[ERROR] out of bound [3]\n");
+			exit(-1);
+		}
+
+		char dllName[MAX_STRING_SIZE] = { '\0', };
+
+		DWORD dwStrlen = strnlen(getStringFromBuffer(dwTemp), MAX_STRING_SIZE);
+		memcpy(dllName, getStringFromBuffer(dwTemp), dwStrlen);
+		printf("%-36s\n", dllName);
+		printSmallLine();
+
+		printf("%-36s %08x\n", "OriginalFirstThunk RVA (INT)", stIDT[i].OriginalFirstThunk);
+		printf("%-36s %08x\n", "TimeDateStamp", stIDT[i].TimeDateStamp);
+		printf("%-36s %08x\n", "ForwarderChain", stIDT[i].ForwarderChain);
+		printf("%-36s %08x\n", "Name RVA", stIDT[i].Name);
+		printf("%-36s %08x\n", "FirstThunk RVA (IAT)", stIDT[i].FirstThunk);
+		printSmallLine();
+
+		DWORD dwCurrentThunkBase = addDwordToLpvoid(lpvBaseAddr, stIDT[i].OriginalFirstThunk);
+		if ((DWORD)lpvBaseAddr + dwTotalVirtualSize < dwCurrentThunkBase)
+		{
+			printf("[ERROR] out of bound [3]\n");
+			exit(-1);
+		}
+
+		dwTemp = dwCurrentThunkBase;
+
+		DWORD dwEntrySize = 0;
+
+		// then allocate the struct and store the data
+		if (iohMagic == 0x10b)
+		{
+			dwCount = 0;
+			// count the number of entries first (until reaching to null)
+			while (*(DWORD*)(LPVOID)dwTemp != 0x00000000)	// fffak. thanks to ctlpset.cpp (pvData)
+			{
+				dwCount++;
+				dwTemp += 4;
+			}
+
+			IMAGE_THUNK_DATA32 *stIAT = NULL;
+			stIAT = (IMAGE_THUNK_DATA32 *)malloc(sizeof(IMAGE_THUNK_DATA32)* dwCount);
+			memset(stIAT, 0x00, sizeof(IMAGE_THUNK_DATA32)* dwCount);
+			dwEntrySize = sizeof(DWORD);
+
+			for (DWORD j = 0; j < dwCount; j++)
+			{
+				memcpy(&stIAT[j].u1.AddressOfData, (LPVOID)(dwCurrentThunkBase + dwEntrySize * j), dwEntrySize);
+
+				dwTemp = addDwordToLpvoid(lpvBaseAddr, stIAT[j].u1.AddressOfData);
+				if ((DWORD)lpvBaseAddr + dwTotalVirtualSize < dwTemp)
+				{
+					printf("[ERROR] out of bound [3]\n");
+					exit(-1);
+				}
+
+				short ordinal = 0;
+				char funcName[MAX_STRING_SIZE] = { '\0', };
+
+				memcpy(&ordinal, (LPVOID)dwTemp, sizeof(short));
+				DWORD dwStrlen = strnlen(getStringFromBuffer(dwTemp + 2), MAX_STRING_SIZE);
+				memcpy(funcName, getStringFromBuffer(dwTemp + 2), dwStrlen) ;
+				printf("%-36s %08x [%04x]\n", funcName, stIAT[j].u1.AddressOfData, ordinal);
+			}
+			printBigLine();
+		}
+
+
+		else if (iohMagic == 0x20b)
+		{
+			dwCount = 0;
+			// count the number of entries first (until reaching to null)
+			while (*(ULONGLONG*)(LPVOID)dwTemp != 0x00000000i64)
+			{
+				dwCount++;
+				dwTemp += 8;
+			}
+
+			IMAGE_THUNK_DATA64 *stIAT = NULL;
+			stIAT = (IMAGE_THUNK_DATA64 *)malloc(sizeof(IMAGE_THUNK_DATA64)* dwCount);
+			memset(stIAT, 0x00, sizeof(IMAGE_THUNK_DATA64)* dwCount);
+			dwEntrySize = sizeof(ULONGLONG);
+
+			for (DWORD j = 0; j < dwCount; j++)
+			{
+				memcpy(&stIAT[j].u1.AddressOfData, (LPVOID)(dwCurrentThunkBase + dwEntrySize * j), dwEntrySize);
+				dwTemp = addDwordToLpvoid(lpvBaseAddr, (DWORD)stIAT[j].u1.AddressOfData); // [TODO] potential truncation
+				if ((DWORD)lpvBaseAddr + dwTotalVirtualSize < dwTemp)
+				{
+					printf("[ERROR] out of bound [3]\n");
+					exit(-1);
+				}
+
+				short ordinal = 0;
+				char funcName[MAX_STRING_SIZE] = { '\0', };
+
+				memcpy(&ordinal, (LPVOID)dwTemp, sizeof(short));
+				DWORD dwStrlen = strnlen(getStringFromBuffer(dwTemp + 2), MAX_STRING_SIZE);
+				memcpy(funcName, getStringFromBuffer(dwTemp + 2), dwStrlen);
+				printf("%-36s %08I64x [%04x]\n", funcName, stIAT[j].u1.AddressOfData, ordinal);
+			}
+
+			printBigLine();
+		}
+
+		else
+		{
+			// just keeping
+		}
+	}
+
+	printBigLine();
 
 	// export
 

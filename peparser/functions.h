@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <winnt.h>
-
+#define MAX_STRING_SIZE 0x100
 ULONGLONG convertToUlonglong(UINT8 *buffer)
 {
 	ULONGLONG res = 0;
@@ -58,6 +58,22 @@ DWORD addDwordToLpvoid(LPVOID base, DWORD adjustment)
 {
 	// bound check 
 	return (DWORD)base + adjustment;
+}
+
+char *getStringFromBuffer(DWORD offset)
+{
+	char szTempBuffer[MAX_STRING_SIZE];
+	char *szDllName = NULL;
+	DWORD dwStrLen = 0;
+
+	memcpy(szTempBuffer, (LPVOID)offset, MAX_STRING_SIZE);
+	dwStrLen = strnlen(szTempBuffer, MAX_STRING_SIZE);
+
+	szDllName = (char *)malloc(dwStrLen * sizeof(char) + 2);
+	memcpy(szDllName, szTempBuffer, dwStrLen);
+	memset(szDllName + dwStrLen, 0x00, 2);
+
+	return szDllName;
 }
 
 VOID printBigLine()
@@ -551,4 +567,3 @@ DWORD parseSectionHeader(IMAGE_SECTION_HEADER *sectionHeader, UINT8 *lpBuffer, D
 
 	return dwCursor;
 }
-
