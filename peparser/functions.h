@@ -62,14 +62,25 @@ DWORD addDwordToLpvoid(LPVOID base, DWORD adjustment)
 
 char *getStringFromBuffer(DWORD offset)
 {
-	char szTempBuffer[MAX_STRING_SIZE];
+	char szTempBuffer[MAX_STRING_SIZE] = { 0x00, };
 	char *szDllName = NULL;
 	DWORD dwStrLen = 0;
 
-	memcpy(szTempBuffer, (LPVOID)offset, MAX_STRING_SIZE);
-	dwStrLen = strnlen(szTempBuffer, MAX_STRING_SIZE);
+	strncpy_s(szTempBuffer, (const char *)offset, MAX_STRING_SIZE);
+	dwStrLen = strnlen_s(szTempBuffer, MAX_STRING_SIZE);
+	if (dwStrLen > MAX_STRING_SIZE)
+	{
+		printf("invalid dwStrLen\n");
+		exit(-1);
+	}
 
 	szDllName = (char *)malloc(dwStrLen * sizeof(char) + 2);
+	if (!szDllName)
+	{
+		printf("failed to allocate szDllName\n");
+		exit(-1);
+	}
+
 	memcpy(szDllName, szTempBuffer, dwStrLen);
 	memset(szDllName + dwStrLen, 0x00, 2);
 

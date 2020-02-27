@@ -144,6 +144,12 @@ int main()
 		ish = (IMAGE_SECTION_HEADER *)malloc(sizeof(IMAGE_SECTION_HEADER) * stFileHeader.NumberOfSections);
 	}
 
+	if (!ish)
+	{
+		printf("fail to allocate ish\n");
+		exit(-1);
+	}
+
 	for (int i = 0; i < stFileHeader.NumberOfSections; i++)
 	{
 		dwCursor = parseSectionHeader(&ish[i], lpBuffer, dwCursor, i);
@@ -238,6 +244,11 @@ int main()
 	DWORD dwCount = 0;
 
 	stIDT = (IMAGE_IMPORT_DESCRIPTOR *) malloc (sizeof(IMAGE_IMPORT_DESCRIPTOR) * dwNumIDTEntries);
+	if (stIDT == NULL)
+	{
+		printf("[ERROR] failed to allocate stIDT\n");
+		exit(-1);
+	}
 
 	for (int i = 0; i < dwNumIDTEntries; i++)
 	{
@@ -304,6 +315,12 @@ int main()
 
 			IMAGE_THUNK_DATA32 *stIAT = NULL;
 			stIAT = (IMAGE_THUNK_DATA32 *)malloc(sizeof(IMAGE_THUNK_DATA32)* dwCount);
+			if (stIAT == NULL)
+			{
+				printf("[ERROR] failed to allocate stIDT\n");
+				exit(-1);
+			}
+
 			memset(stIAT, 0x00, sizeof(IMAGE_THUNK_DATA32)* dwCount);
 			dwEntrySize = sizeof(DWORD);
 
